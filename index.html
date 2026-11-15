@@ -41,7 +41,7 @@
   #home .brand img{width:64px;height:64px;}
   #home .brand h1{margin:10px 0 0;font-size:28px;font-weight:700;letter-spacing:-.5px;}
   #home .brand p{margin:6px 0 0;font-size:16px;color:var(--sub);}
-  #home .choices{-webkit-flex:1;flex:1;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;min-height:0;max-height:420px;}
+  #home .choices{-webkit-flex:1;flex:1;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;min-height:0;max-height:540px;}
   .choice{-webkit-flex:1;flex:1;min-height:0;margin:0 0 12px;border:0;border-radius:20px;background:var(--card);color:var(--ink);cursor:pointer;
     display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;
     padding:0 22px 0 16px;font-size:19px;font-weight:600;letter-spacing:-.2px;text-align:right;
@@ -53,6 +53,29 @@
   .c-pc .ico{background:rgba(0,122,255,.12);color:var(--blue);}
   .c-cj .ico{background:rgba(255,149,0,.14);color:var(--orange);}
   .c-sv .ico{background:rgba(52,199,89,.14);color:#28a745;}
+  .c-cal .ico{background:rgba(255,59,48,.12);color:var(--red);}
+
+  /* calendario */
+  #cal{padding-bottom:0;}
+  .months{-webkit-flex:1;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:y mandatory;-webkit-scroll-snap-type:y mandatory;margin:0 -4px;}
+  .month{height:100%;scroll-snap-align:start;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;padding:0 4px calc(16px + env(safe-area-inset-bottom));}
+  .month .mh{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;-webkit-justify-content:space-between;justify-content:space-between;margin:2px 4px 10px;-webkit-flex-shrink:0;flex-shrink:0;}
+  .month .mh b{font-size:20px;font-weight:700;letter-spacing:-.3px;}
+  .month .mh b span{color:var(--red);}
+  .month .mh small{font-size:12px;color:var(--sub);}
+  .ctab{-webkit-flex:1;flex:1;min-height:0;background:var(--card);border-radius:16px;overflow:hidden;display:grid;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);}
+  .ctab > div{border-bottom:1px solid var(--sep);border-left:1px solid var(--sep);min-width:0;min-height:0;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;}
+  .ctab .lab{border-left:0;-webkit-justify-content:flex-start;justify-content:flex-start;padding:0 6px 0 8px;font-size:11px;overflow:hidden;font-weight:600;color:#3c3c43;letter-spacing:.2px;line-height:1.15;}
+  .ctab .corner{border-left:0;}
+  .ctab .dh{-webkit-flex-direction:column;flex-direction:column;}
+  .ctab .dh small{font-size:10px;font-weight:600;color:var(--red);letter-spacing:.5px;}
+  .ctab .dh b{font-size:20px;font-weight:600;line-height:1.1;}
+  .ctab .dh.today b{color:#fff;background:var(--red);border-radius:50%;width:30px;height:30px;line-height:30px;text-align:center;font-size:17px;}
+  .ctab .last{border-bottom:0;}
+  .ctab textarea{width:100%;height:100%;border:0;resize:none;outline:none;background:transparent;padding:4px;margin:0;
+    font-family:inherit;font-size:13px;font-weight:500;color:var(--ink);text-align:center;line-height:1.2;-webkit-user-select:text;user-select:text;-webkit-appearance:none;border-radius:0;}
+  .ctab textarea:focus{background:rgba(0,122,255,.08);}
   .choice .ttl{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;}
   .choice .chev{color:#c7c7cc;font-size:22px;margin-left:12px;font-weight:400;}
   @media (orientation:landscape){
@@ -147,7 +170,21 @@
       <span class="ico"><svg viewBox="0 0 64 64" fill="currentColor"><circle cx="32" cy="13" r="9"/><path d="M22 26h20a6 6 0 0 1 6 6v14a3 3 0 0 1-6 0V35h-1v27h-8V46h-2v16h-8V35h-1v11a3 3 0 0 1-6 0V32a6 6 0 0 1 6-6z"/></svg></span>
       <span class="ttl">SERVIZIO<span class="chev">&#8250;</span></span>
     </button>
+    <button class="choice c-cal" data-role="cal">
+      <span class="ico"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="12" width="48" height="44" rx="7"/><path d="M8 26h48M21 6v12M43 6v12"/><circle cx="22" cy="40" r="2.5" fill="currentColor" stroke="none"/><circle cx="32" cy="40" r="2.5" fill="currentColor" stroke="none"/><circle cx="42" cy="40" r="2.5" fill="currentColor" stroke="none"/></svg></span>
+      <span class="ttl">CALENDARIO<span class="chev">&#8250;</span></span>
+    </button>
   </div>
+</section>
+
+<!-- CALENDARIO -->
+<section id="cal" class="screen">
+  <div class="bar">
+    <div class="t">Calendario</div>
+    <span class="dot"></span>
+    <button class="hbtn" data-back>&#8249; Indietro</button>
+  </div>
+  <div class="months"></div>
 </section>
 
 <!-- CHIESA JUNIOR -->
@@ -315,10 +352,73 @@ function show(r){
   $('#'+(r||'home')).className='screen on';
   if(r==='cj'||r==='sv') buildPhone(r);
   if(r==='pc') { buildPC(); initAudio(); }
+  if(r==='cal') buildCal();
   render();
 }
 $all('.choice').forEach(function(b){ b.onclick=function(){ show(this.getAttribute('data-role')); }; });
 $all('[data-back]').forEach(function(b){ b.onclick=function(){ role=null; lsSet('fdv_role',null); show(null); }; });
+
+/* ---------- calendario ---------- */
+var CAL_ROWS = ['PIANTINA','QUERCIA','ACCOGLIENZA 1','ACCOGLIENZA 2','MINISTRI','ORDINE 1','ORDINE 2','JOLLY'];
+var CAL_FROM = [2026,10], CAL_TO = [2027,11];   /* mesi 0-11: da novembre 2026 a dicembre 2027 */
+var MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+var cal = {};
+try{ cal = JSON.parse(lsGet('fdv_cal')||'{}') || {}; }catch(e){ cal = {}; }
+function pad(x){ return (x<10?'0':'')+x; }
+function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function sundays(y,m){
+  var d=new Date(y,m,1), out=[]; d.setDate(1+(7-d.getDay())%7);
+  while(d.getMonth()===m){ out.push(new Date(d.getTime())); d.setDate(d.getDate()+7); }
+  return out;
+}
+function saveCalLocal(){ lsSet('fdv_cal', JSON.stringify(cal)); }
+function buildCal(){
+  var box=$('#cal .months'); box.innerHTML='';
+  var today=new Date(), todayKey=ymd(today), target=null;
+  var y=CAL_FROM[0], m=CAL_FROM[1];
+  while(y<CAL_TO[0] || (y===CAL_TO[0] && m<=CAL_TO[1])){
+    var sun=sundays(y,m), cols=sun.length;
+    var pg=document.createElement('div'); pg.className='month';
+    var html='<div class="mh"><b>'+MESI[m]+' <span>'+y+'</span></b><small>scorri &#8595;</small></div>';
+    html+='<div class="ctab" style="grid-template-columns:minmax(94px,1.3fr) repeat('+cols+',1fr);grid-template-rows:auto repeat('+CAL_ROWS.length+',1fr)">';
+    html+='<div class="corner"></div>';
+    sun.forEach(function(d){ html+='<div class="dh'+(ymd(d)===todayKey?' today':'')+'"><small>DOM</small><b>'+d.getDate()+'</b></div>'; });
+    CAL_ROWS.forEach(function(lab,r){
+      var last = r===CAL_ROWS.length-1 ? ' last' : '';
+      html+='<div class="lab'+last+'">'+esc(lab)+'</div>';
+      sun.forEach(function(d){
+        var k=ymd(d)+'|'+r;
+        html+='<div class="'+last.trim()+'"><textarea maxlength="40" data-k="'+k+'">'+esc(cal[k]||'')+'</textarea></div>';
+      });
+    });
+    html+='</div>';
+    pg.innerHTML=html; box.appendChild(pg);
+    if(y===today.getFullYear() && m===today.getMonth()) target=pg;
+    m++; if(m>11){ m=0; y++; }
+  }
+  if(target) setTimeout(function(){ box.scrollTop = target.offsetTop - box.offsetTop; }, 0);
+  var timers={};
+  function commit(t){
+    var k=t.getAttribute('data-k'), v=t.value.replace(/^\s+|\s+$/g,'');
+    if((cal[k]||'')===v) return;
+    if(v) cal[k]=v; else delete cal[k];
+    saveCalLocal();
+    var p=k.split('|'); publish('cal/'+p[0]+'/'+p[1], v);
+  }
+  box.oninput=function(e){ var t=e.target; if(t.tagName!=='TEXTAREA') return; var k=t.getAttribute('data-k'); clearTimeout(timers[k]); timers[k]=setTimeout(function(){ commit(t); },700); };
+  box.addEventListener('blur', function(e){ if(e.target.tagName==='TEXTAREA') commit(e.target); }, true);
+  box.onkeydown=function(e){ if(e.keyCode===13){ e.preventDefault(); e.target.blur(); } };
+}
+function onCalMsg(date, r, v){
+  if(!/^\d{4}-\d\d-\d\d$/.test(date) || !(r>=0 && r<CAL_ROWS.length)) return;
+  var k=date+'|'+r;
+  if(v) cal[k]=v; else delete cal[k];
+  saveCalLocal();
+  if(role==='cal'){
+    var t=document.querySelector('#cal textarea[data-k="'+k+'"]');
+    if(t && document.activeElement!==t) t.value=v||'';
+  }
+}
 
 /* ---------- sound (PC) ---------- */
 var actx=null, soundOn = lsGet('fdv_sound')!=='0', beepTimer=null;
@@ -361,6 +461,7 @@ function publish(sub, payload){
 
 function onMessage(msg){
   var sub = msg.destinationName.substr(CHANNEL.length+1).split('/');
+  if(sub[0]==='cal'){ onCalMsg(sub[1], +sub[2], msg.payloadString); return; }
   var n = +sub[1]; if(!(n>=1 && n<=16)) return;
   var p = msg.payloadString;
   if(sub[0]==='name'){ names[n]=p; lsSet('fdv_name_'+n, p||null); }
@@ -402,7 +503,7 @@ window.addEventListener('online', function(){ retry=1000; connect(); });
 
 /* ---------- start ---------- */
 for(var i=1;i<=16;i++){ var v=lsGet('fdv_name_'+i); if(v) names[i]=v; }
-var saved=lsGet('fdv_role'); show(saved==='pc'||saved==='cj'||saved==='sv' ? saved : null);
+var saved=lsGet('fdv_role'); show(saved==='pc'||saved==='cj'||saved==='sv'||saved==='cal' ? saved : null);
 setDot();
 
 (function loadPaho(){
