@@ -144,11 +144,40 @@
   #modal .row button:first-child{border-left:0;}
   .b-save{font-weight:600;} .b-reset{color:var(--red)!important;}
 
+  /* codice d'accesso */
+  #lock{-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;}
+  .lockbox{width:100%;max-width:320px;text-align:center;margin-top:-6vh;}
+  .lockbox img{width:72px;height:72px;}
+  .lockbox h1{margin:12px 0 0;font-size:28px;font-weight:700;letter-spacing:-.5px;}
+  .lockbox p{margin:6px 0 22px;font-size:16px;color:var(--sub);}
+  #lockInput{display:block;width:100%;height:50px;border:0;border-radius:14px;background:var(--card);padding:0 16px;font-size:20px;text-align:center;letter-spacing:4px;outline:none;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.04);-webkit-appearance:none;-webkit-user-select:text;user-select:text;font-family:inherit;}
+  #lockInput::placeholder{letter-spacing:0;color:#c7c7cc;}
+  #lockErr{height:22px;line-height:22px;font-size:14px;color:var(--red);margin-top:6px;}
+  #lockBtn{width:100%;height:50px;border:0;border-radius:14px;background:var(--blue);color:#fff;font-size:17px;font-weight:600;cursor:pointer;margin-top:4px;}
+  #lockBtn:active{opacity:.8;}
+  .shake{-webkit-animation:shake .4s;animation:shake .4s;}
+  @-webkit-keyframes shake{20%,60%{-webkit-transform:translateX(-10px);}40%,80%{-webkit-transform:translateX(10px);}}
+  @keyframes shake{20%,60%{transform:translateX(-10px);}40%,80%{transform:translateX(10px);}}
+  #logout{-webkit-align-self:center;align-self:center;border:0;background:transparent;color:var(--sub);font-size:14px;padding:12px 16px 0;cursor:pointer;-webkit-flex-shrink:0;flex-shrink:0;}
+
   #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));-webkit-transform:translateX(-50%);transform:translateX(-50%);background:rgba(28,28,30,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:500;opacity:0;-webkit-transition:opacity .25s;transition:opacity .25s;pointer-events:none;z-index:20;white-space:nowrap;}
   #toast.on{opacity:1;}
 </style>
 </head>
 <body>
+
+<!-- CODICE D'ACCESSO -->
+<section id="lock" class="screen">
+  <div class="lockbox">
+    <img src="icons/logo.png" alt="">
+    <h1>FDV NOTIFY</h1>
+    <p>Inserisci il codice d'accesso</p>
+    <input id="lockInput" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Codice">
+    <div id="lockErr"></div>
+    <button id="lockBtn">Entra</button>
+  </div>
+</section>
 
 <!-- HOME -->
 <section id="home" class="screen">
@@ -175,6 +204,7 @@
       <span class="ttl">CALENDARIO<span class="chev">&#8250;</span></span>
     </button>
   </div>
+  <button id="logout">&#128274; Esci</button>
 </section>
 
 <!-- CALENDARIO -->
@@ -238,10 +268,12 @@
 
 <script>
 /* ================== CONFIGURAZIONE ==================
-   CHANNEL: codice segreto del vostro canale. Tutti i dispositivi
-   che usano lo stesso codice comunicano tra loro. Se volete un
-   canale nuovo, cambiatelo (lettere/numeri) e ricaricate il file. */
-var CHANNEL = 'fdvnotify/3b16f1ece8cbf728';
+   ACCESS_HASH: impronta (SHA-256) del codice d'accesso.
+   Il codice vero non è scritto da nessuna parte: dal codice
+   inserito si ricava anche il canale di comunicazione, quindi
+   senza codice non si leggono né si modificano i dati. */
+var ACCESS_HASH = '1e6b0d0ead8620d02da54add5853cc0c9d0aff5933471f200632db4990d52a4e';
+var CHANNEL = null;
 var BROKER  = { host: 'broker.hivemq.com', port: 8884, path: '/mqtt' };
 /* ==================================================== */
 
@@ -479,7 +511,7 @@ function onMessage(msg){
 
 var retry=1000, connecting=false;
 function connect(){
-  if(connecting || connected || !window.Paho) return;
+  if(connecting || connected || !window.Paho || !CHANNEL) return;
   connecting=true;
   var C = (Paho.MQTT && Paho.MQTT.Client) || Paho.Client;
   client = new C(BROKER.host, BROKER.port, BROKER.path, 'fdv_'+Math.random().toString(36).slice(2,12));
@@ -501,16 +533,71 @@ function later(){ setTimeout(connect, retry); retry=Math.min(retry*2, 15000); }
 document.addEventListener('visibilitychange', function(){ if(!document.hidden && !connected){ retry=1000; connect(); } });
 window.addEventListener('online', function(){ retry=1000; connect(); });
 
+/* ---------- codice d'accesso ---------- */
+function sha256(ascii){
+  function rr(v,a){ return (v>>>a)|(v<<(32-a)); }
+  var mp=Math.pow, mw=mp(2,32), i, j, res='', words=[], bl, hash=[], k=[], isC={}, c=0;
+  ascii=unescape(encodeURIComponent(ascii)); bl=ascii.length*8;
+  for(var cand=2;c<64;cand++){ if(!isC[cand]){ for(i=0;i<313;i+=cand) isC[i]=cand; if(c<8) hash[c]=(mp(cand,.5)*mw)|0; k[c++]=(mp(cand,1/3)*mw)|0; } }
+  ascii+='\x80'; while(ascii.length%64-56) ascii+='\x00';
+  for(i=0;i<ascii.length;i++){ j=ascii.charCodeAt(i); words[i>>2]|=j<<((3-i)%4)*8; }
+  words[words.length]=((bl/mw)|0); words[words.length]=(bl);
+  for(j=0;j<words.length;){
+    var w=words.slice(j,j+=16), oh=hash; hash=hash.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=w[i-15], w2=w[i-2], a=hash[0], e=hash[4];
+      var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]
+        +(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0;
+    }
+    for(i=0;i<8;i++) hash[i]=(hash[i]+oh[i])|0;
+  }
+  for(i=0;i<8;i++) for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; res+=((b<16)?0:'')+b.toString(16); }
+  return res;
+}
+function normCode(c){ return String(c||'').replace(/^\s+|\s+$/g,'').toLowerCase(); }
+function tryUnlock(code){
+  code=normCode(code);
+  if(!code || sha256('accesso|'+code)!==ACCESS_HASH) return false;
+  CHANNEL='fdvnotify/'+sha256('canale|'+code).slice(0,24);
+  if(lsGet('fdv_chan')!==CHANNEL){   /* canale diverso: azzera i dati locali vecchi */
+    for(var i=1;i<=16;i++) lsSet('fdv_name_'+i,null);
+    lsSet('fdv_cal',null); names={}; cal={}; lsSet('fdv_chan',CHANNEL);
+  }
+  lsSet('fdv_code',code);
+  return true;
+}
+function startApp(){
+  for(var i=1;i<=16;i++){ var v=lsGet('fdv_name_'+i); if(v) names[i]=v; }
+  var saved=lsGet('fdv_role'); show(saved==='pc'||saved==='cj'||saved==='sv'||saved==='cal' ? saved : null);
+  setDot(); connect();
+}
+function lockSubmit(){
+  var inp=$('#lockInput');
+  if(tryUnlock(inp.value)){ inp.blur(); inp.value=''; startApp(); }
+  else {
+    var b=$('#lock .lockbox'); b.className='lockbox shake'; setTimeout(function(){ b.className='lockbox'; },450);
+    $('#lockErr').textContent='Codice errato'; inp.select();
+  }
+}
+$('#lockBtn').onclick=lockSubmit;
+$('#lockInput').onkeydown=function(e){ if(e.keyCode===13) lockSubmit(); else $('#lockErr').textContent=''; };
+$('#logout').onclick=function(){
+  lsSet('fdv_code',null); lsSet('fdv_role',null);
+  try{ if(client && connected) client.disconnect(); }catch(e){}
+  location.reload();
+};
+
 /* ---------- start ---------- */
-for(var i=1;i<=16;i++){ var v=lsGet('fdv_name_'+i); if(v) names[i]=v; }
-var saved=lsGet('fdv_role'); show(saved==='pc'||saved==='cj'||saved==='sv'||saved==='cal' ? saved : null);
-setDot();
+if(tryUnlock(lsGet('fdv_code'))) startApp();
+else { $all('.screen').forEach(function(s){ s.className='screen'; }); $('#lock').className='screen on'; }
 
 (function loadPaho(){
   var urls=['https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js','https://unpkg.com/paho-mqtt@1.1.0/paho-mqtt-min.js'], k=0;
   function next(){
     if(k>=urls.length){ toast('Errore di rete: impossibile caricare'); return; }
-    var s=document.createElement('script'); s.src=urls[k++]; s.onload=connect; s.onerror=next; document.head.appendChild(s);
+    var s=document.createElement('script'); s.src=urls[k++]; s.onload=function(){ connect(); }; s.onerror=next; document.head.appendChild(s);
   }
   next();
 })();
